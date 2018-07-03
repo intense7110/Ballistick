@@ -37,7 +37,7 @@ export default class Webpack extends Base {
     return {
       resolve: {
         descriptionFiles: ['package.json'],
-        extensions      : [_ext],
+        extensions      : ['.coffee', '.js'],
         modules: [
           join(root, 'webpack/imports'),
           'node_modules',

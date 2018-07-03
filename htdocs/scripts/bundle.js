@@ -74,13 +74,48 @@ var _anchor = __webpack_require__(1);
 
 var _anchor2 = _interopRequireDefault(_anchor);
 
+var _modal = __webpack_require__(2);
+
+var _modal2 = _interopRequireDefault(_modal);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-window.addEventListener('DOMContentLoaded', function () {
+var newClass;
 
-  Array.from(document.querySelectorAll('a[href^="#"]'), function (el) {
-    new _anchor2.default(el);
+// import Menu from 'view/menu'
+// import Tab from 'view/tab'
+// import Slider from 'view/slider'
+// import LoopSlider from 'view/loop-slider'
+// import FixedGo2Top from 'view/fixed-go2top'
+// import Validate from 'view/validate'
+// import FixedSubmit from 'view/fixed-submit'
+
+// multiple new class
+newClass = function newClass(className, elm, opts) {
+  var elmArr;
+  elmArr = document.querySelectorAll(elm);
+  return Array.from(elmArr, function (_elm) {
+    if (opts) {
+      return new className(_elm, opts);
+    } else {
+      return new className(_elm);
+    }
   });
+};
+
+window.addEventListener('DOMContentLoaded', function () {
+  var newClassArray;
+  newClassArray = [[_anchor2.default, 'a[href^="#"]']];
+  // [ Tab, '.js-tab']
+  // [ Slider, '.js-slider' ]
+  // [ LoopSlider, '.js-loop-slider']
+  // [ FixedGo2Top, '.js-fixed-go2top' ]
+  // [ Validate, '.js-validate' ]
+  // [ FixedSubmit, '.js-search-submit']
+  newClassArray.forEach(function (arr) {
+    return newClass.apply(this, arr);
+  });
+  return new _modal2.default();
 });
 
 /***/ }),
@@ -98,78 +133,197 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Anchor = function () {
-  function Anchor($el) {
-    _classCallCheck(this, Anchor);
+var Anchor, deepAssign;
 
-    var _$target = this._$target = function () {
-      var _href = $el.getAttribute('href');
-      var _elName = _href === '#' ? 'body' : _href;
-      return document.querySelector(_elName);
-    }();
-
-    if (_$target.length) return;
-
-    this._duration = 500;
-    this._timer = null;
-
-    $el.addEventListener('click', this._scroll.bind(this));
-  }
-
-  _createClass(Anchor, [{
-    key: '_scroll',
-    value: function _scroll(e) {
-      var _$target = this._$target;
+var _VENDORS = VENDORS;
+deepAssign = _VENDORS.deepAssign;
 
 
-      this._beforeTop = window.pageYOffset;
-      this._changeTop = _$target.getBoundingClientRect().top;
+Anchor = function () {
+  var defOpts;
 
-      e.preventDefault();
-      this._startTime = new Date().getTime();
-      this._animate();
+  var Anchor = function () {
+    function Anchor(elm1) {
+      var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      _classCallCheck(this, Anchor);
+
+      this.onClicked = this.onClicked.bind(this);
+      this.elm = elm1;
+
+      var _deepAssign = deepAssign({}, defOpts, opts);
+
+      this.duration = _deepAssign.duration;
+      this.easing = _deepAssign.easing;
+      this.offset = _deepAssign.offset;
+
+      this.elm.addEventListener('click', this.onClicked);
     }
-  }, {
-    key: '_animate',
-    value: function _animate() {
-      var _timer = this._timer,
-          _startTime = this._startTime,
-          _duration = this._duration,
-          _beforeTop = this._beforeTop,
-          _changeTop = this._changeTop;
 
+    _createClass(Anchor, [{
+      key: 'onClicked',
+      value: function onClicked(event) {
+        var _elm, elm, href, nowHash, nowHref, targetHash, targetLink;
+        elm = this.elm;
 
-      if (_timer) {
-        clearTimeout(_timer);
-      }
-
-      var _newTime = new Date().getTime();
-
-      var _currentTime = function () {
-        if (_duration > _newTime - _startTime) {
-          return _newTime - _startTime;
-        } else {
-          return _duration;
+        href = elm.getAttribute('href');
+        targetLink = elm.href;
+        targetHash = elm.dataset.hash;
+        nowHash = location.hash;
+        nowHref = location.href.replace(nowHash, '');
+        if (href.indexOf('#') !== 0) {
+          if (targetLink === nowHref) {
+            href = targetHash;
+          } else {
+            $elm.href = targetLink + targetHash;
+            return true;
+          }
         }
-      }();
-
-      window.scrollTo(0, this._easing(_currentTime, _beforeTop, _changeTop, _duration));
-
-      if (_duration > _currentTime) {
-        this._timer = setTimeout(this._animate.bind(this), 15);
+        if (href.length === 0) {
+          return;
+        }
+        event.preventDefault();
+        _elm = href === '#' ? 'html' : href;
+        return this.scroll(_elm);
       }
-    }
-  }, {
-    key: '_easing',
-    value: function _easing(t, b, c, d) {
-      return -c * (t /= d) * (t - 2) + b;
-    }
-  }]);
+    }, {
+      key: 'scroll',
+      value: function scroll(_elm) {
+        _elm = document.querySelector(_elm);
+        if (!_elm) {
+          return true;
+        }
+        Velocity(_elm, 'stop');
+        return Velocity(_elm, 'scroll', {
+          duration: this.duration,
+          easing: this.easing,
+          offset: this.offset
+        });
+      }
+    }]);
+
+    return Anchor;
+  }();
+
+  ;
+
+  defOpts = {
+    duration: 600,
+    easing: 'easeOutQuad',
+    offset: 0
+  };
 
   return Anchor;
 }();
 
 exports.default = Anchor;
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Modal, deepAssign;
+
+var _VENDORS = VENDORS;
+deepAssign = _VENDORS.deepAssign;
+
+
+Modal = function () {
+  var defOpts;
+
+  var Modal = function () {
+    function Modal(elm1) {
+      var _this = this;
+
+      var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      _classCallCheck(this, Modal);
+
+      this.onClicked = this.onClicked.bind(this);
+      this.elm = elm1;
+
+      var _deepAssign = deepAssign({}, defOpts, opts);
+
+      this.duration = _deepAssign.duration;
+      this.easing = _deepAssign.easing;
+      this.offset = _deepAssign.offset;
+
+      this.button = document.querySelectorAll('.js-modal-button');
+      Array.from(this.button, function (_button) {
+        return _button.addEventListener('click', _this.openClick);
+      });
+    }
+
+    _createClass(Modal, [{
+      key: 'openClick',
+      value: function openClick() {
+        return console.log('open');
+      }
+    }, {
+      key: 'onClicked',
+      value: function onClicked(event) {
+        var _elm, elm, href, nowHash, nowHref, targetHash, targetLink;
+        elm = this.elm;
+
+        href = elm.getAttribute('href');
+        targetLink = elm.href;
+        targetHash = elm.dataset.hash;
+        nowHash = location.hash;
+        nowHref = location.href.replace(nowHash, '');
+        if (href.indexOf('#') !== 0) {
+          if (targetLink === nowHref) {
+            href = targetHash;
+          } else {
+            $elm.href = targetLink + targetHash;
+            return true;
+          }
+        }
+        if (href.length === 0) {
+          return;
+        }
+        event.preventDefault();
+        _elm = href === '#' ? 'html' : href;
+        return this.scroll(_elm);
+      }
+    }, {
+      key: 'scroll',
+      value: function scroll(_elm) {
+        _elm = document.querySelector(_elm);
+        Velocity(_elm, 'stop');
+        return Velocity(_elm, 'scroll', {
+          duration: this.duration,
+          easing: this.easing,
+          offset: this.offset
+        });
+      }
+    }]);
+
+    return Modal;
+  }();
+
+  ;
+
+  defOpts = {
+    duration: 600,
+    easing: 'easeOutQuad',
+    offset: 0
+  };
+
+  return Modal;
+}();
+
+exports.default = Modal;
 
 /***/ })
 /******/ ]);
