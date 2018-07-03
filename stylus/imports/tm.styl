@@ -1,0 +1,554 @@
+use('../plugins/has-own-property.js')
+
+blank-png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQI12NgYAAAAAMAASDVlMcAAAAASUVORK5CYII='
+
+_unit-base-px(value)
+  if unit(value) == ''
+    unit(value, 'px')
+  else
+    value
+
+//ディープマージしたオブジェクトを取得する
+get-deep-merge(a, b)
+  c = merge({}, a)
+  for key in b
+    if has-own-property(b, key)
+      if has-own-property(a, key) && (typeof(a[key]) == 'object' && typeof(b[key]) == 'object')
+        c[key] = get-deep-merge(a[key], b[key])
+      else
+        c[key] = b[key]
+  return c
+
+//画像のサイズを取得する
+// @example
+// ----------
+// get-img-size('../../htdocs/images/sample.png')  // image
+// get-img-size('images/sample/a.png')  // sprite
+// ----------
+get-img-size(imgpath)
+  if match('^.+(htdocs).+$', imgpath)
+    img-size = image-size(imgpath)
+    return {
+      width : img-size[0]
+      height: img-size[1]
+    }
+  else
+    return {
+      width : sprite-hash[imgpath].width
+      height: sprite-hash[imgpath].height
+    }
+
+//パーセントのサイズを割り出す
+get-percent-size(size, base-size)
+  (size / base-size * 100)%
+
+//半分のサイズを割り出す
+get-half-size(size)
+  (size / 2)px
+
+//サイズ指定1
+size(width, height = width)
+  width _unit-base-px(width)
+  height _unit-base-px(height)
+
+//サイズ指定2（最小）
+min-size(width, height = width)
+  min-width _unit-base-px(width)
+  min-height _unit-base-px(height)
+
+//サイズ指定3（100%）
+full-size()
+  width 100%
+  height 100%
+
+//画像を100%にする
+full-sized-img()
+  img
+    width 100%
+
+//画像の親に出来る隙間をなくす
+img-container()
+  line-height 0
+
+//子の画像の大きさを指定する
+img-width(width)
+  img
+    width _unit-base-px(width)
+
+//コンテンツをセンタリング1
+container-centering(width)
+  position relative
+  width _unit-base-px(width)
+  margin-right auto
+  margin-left auto
+
+//コンテンツをセンタリング2（パーセント指定）
+percent-container-centering(width, base-width)
+  width  get-percent-size(width, base-width)
+  margin-left auto
+  margin-right auto
+
+//コンテンツを上下左右センタリング
+// @example
+// ----------
+// centering()  // translate
+// centering(500px)  // margin
+// centering(500px, 200px)  // margin
+// ----------
+centering(width = null, height = width)
+  if width
+    margin (width / -2)px 0 0 (width / -2)px
+  else
+    transform translateX(-50%) translateY(-50%)
+  absolute top 50% left 50%
+
+//アスペクト比を固定したままリサイズ（IE8以上）
+// @example
+// ----------
+// aspect-ratio('../../htdocs/images/sample.png')  // image
+// aspect-ratio('images/sample/a.png')  // sprite
+// aspect-ratio(500, 300)  // size
+// ----------
+aspect-ratio-kept-container(width-or-imgpath, height = null)
+  if typeof(width-or-imgpath) is 'string'
+    img-size = get-img-size(width-or-imgpath)
+    width  = img-size.width
+    height = img-size.height
+  else
+    width = width-or-imgpath
+  width 100%
+  position relative
+  &::before
+    content ""
+    display block
+    padding-top (height / width * 100)%
+  > *
+    position absolute
+
+//aタグをブロック要素にする
+a-block()
+  a
+    display block
+
+//要素をボタンとして扱う
+button()
+  display block
+  cursor pointer
+
+//10pxより小さいfont-size指定（chrome対策）
+small-text(size)
+  display inline-block
+  transform scale(size)
+  transform-origin 0 0
+
+//文字置換
+text-replace()
+  text-indent 100%
+  text-decoration none
+  white-space nowrap
+  overflow hidden
+
+//2行目以降を一文字下げる
+second-line-indent(width)
+  padding-left width
+  text-indent -1 * width
+
+//IE8・9・ハック
+ie8(value)
+  return value unquote("\9")
+
+//selectカスタマイズ
+select-customize(width, height)
+  width width
+  height height
+  line-height height
+  border none
+  cursor pointer
+  appearance button
+  &:focus
+    outline none
+
+//radioカスタマイズ
+radio-customize(width, height)
+  position relative
+  width width
+  height height
+  line-height height
+  border none
+  cursor pointer
+  appearance button
+  &:focus
+    outline none
+  &:checked:after
+    display block
+    absolute left top
+    size(width, height)
+    content ""
+
+//テーブルレイアウトのdlリスト
+dl-list(dl-width, dt-width, dd-width)
+  width _unit-base-px(dl-width)
+  dt
+    float left
+    width _unit-base-px(dt-width)
+    clear both
+  dd
+    width _unit-base-px(dd-width)
+    margin-left _unit-base-px(dt-width)
+
+//Android4 文章の折り返し位置のバグ対応
+fix-android-word-wrap()
+  body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, abbr, address, cite, code, del, dfn, em, img, ins, kbd, q, samp, small, strong, sub, sup, var, b, i, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, figcaption, figure, footer, header, hgroup, menu, nav, section, summary, time, mark, audio, video
+    background url(blank-png) no-repeat
+
+//背景に透明画像を指定する（IE対策を含める）
+//IEではalphaで背景を消すと表示範囲を確保できないため透明画像を配置する必要がある。
+transparent()
+  background url(blank-png)
+
+//IE10でinputに出てくるクリアボタンを表示させない
+input-clear-invisible()
+  &::-ms-clear
+    display none
+
+//アスペクト比で出し分け（iPhone）
+iphone-device-aspect-ratio()
+  @media screen and (device-aspect-ratio: 2/3)
+    .iphone-under5
+      display block
+    .iphone-over5
+      display none
+  @media screen and (device-aspect-ratio: 40/71)
+    .iphone-under5
+      display none
+    .iphone-over5
+      display block
+  @media screen and (device-aspect-ratio: 3/4)
+    .iphone-under5
+      display none
+    .iphone-over5
+      display block
+
+//三角形を生成
+// @example
+// ----------
+// triangle()
+// triangle({ dirction: 'bottom', size: 15px, color: #ccc, { right: 0 }})
+// ----------
+triangle(opts = {})
+  default-opts = {
+    dirction : 'left'
+    size     : 10
+    color    : #000
+    positions: { top: auto, right: auto, bottom: auto, left: auto }
+  }
+  opts = get-deep-merge(default-opts, opts)
+  color-set = {
+    'top'        : 0 0 1
+    'left'       : 0 1 0 0
+    'bottom'     : 1 0 0
+    'right'      : 0 0 0 1
+    'topLeft'    : 1 0 0 1
+    'topRight'   : 1 1 0 0
+    'bottomRight': 0 1 1 0
+    'bottomLeft' : 0 0 1 1
+  }
+  colors = null
+  for val in color-set[opts.dirction]
+    colors = colors (val ? opts.color : transparent)
+  content ""
+  display block
+  width 0
+  height 0
+  border-width: _unit-base-px(opts.size)
+  border-style solid
+  border-color colors
+  position absolute
+  for prop, pos in opts.positions
+    {prop} pos
+
+
+//スプライト
+// @example
+// ----------
+// sprites('images/button/logo.png')  // hover 無し
+// sprites('images/button/logo', '-hover', '.png')  // hover 有り
+// sprites('images/button/logo', '-hover', '.png', '&.is-located')  // hover & selector 有り
+// ----------
+sprites(path, suffix = false, extension = false, selector = false)
+  if !suffix and !extension
+    sprite path
+  if suffix
+    sprite path + extension
+    if selector
+      &:hover, {selector}
+        sprite path + suffix + extension
+    else
+      &:hover
+        sprite path + suffix + extension
+
+//景画像指定
+// @example
+// ----------
+// bg-img("aaa.jpg", left, top, no-repeat, #fff)
+// ----------
+bg-img(file-name, position-x = left, position-y = top, repeat-type = null, bg-color = null, bg-size = false)
+  background url(image-path + file-name) position-x position-y repeat-type bg-color
+  if bg-size
+    background-size bg-size
+
+//背景画像指定（複数）
+// @example
+// ----------
+// bg-img-multiple({
+//   '1': "aaa.jpg" (left top) no-repeat
+//   '2': "bbb.jpg" (left top) no-repeat #fff
+// }, {
+//   '1': (50px 100px)
+//   '2': (50px 100px)
+// })
+// ----------
+bg-img-multiple(imagesHash, sizesHash = false)
+  images = null
+  for i, props in imagesHash
+    for prop, j in props
+      if j is 0
+        if i is 1
+          images = images url(prop)
+        else
+          images = images, url(prop)
+      else
+        if prop
+          images = images prop
+  background images
+  if sizesHash
+    sizes = null
+    for i, prop in sizesHash
+      if prop
+        if i is 1
+          sizes = sizes prop
+        else
+          sizes = sizes, prop
+    background-size sizes
+
+//スプライト画像のホバーアニメーション（フェード）
+// @example
+// ----------
+// sprite-fade-hover('images/sample/a.png')
+// sprite-fade-hover('images/sample/a.png', {
+//   duration: .5, crossFade: true, suffixBefore: '_off', suffixAfter: '_on'
+// })
+// ----------
+sprite-fade-hover(image, opts = {})
+  default-opts = {
+    duration    : .2
+    crossFade   : false
+    suffixBefore: '-off'
+    suffixAfter : '-on'
+  }
+  opts = merge(default-opts, opts)
+  image-size = get-img-size(image + opts.suffixBefore + '.png')
+  width : (image-size.width)px
+  height: (image-size.height)px
+  position relative
+  animation: delayView (opts.duration)s linear
+  &::before, &::after
+    content ''
+    display block
+    absolute top 0 left 0
+  &::before
+    sprite(image + opts.suffixBefore + '.png')
+    if opts.crossFade
+      animation: fadeIn (opts.duration)s linear
+  &::after
+    opacity 0
+    sprite(image + opts.suffixAfter + '.png')
+    animation: fadeOut (opts.duration)s linear
+  &:hover
+    if opts.crossFade
+      &::before
+        opacity 0
+        animation: fadeOut (opts.duration)s linear
+    &::after
+      opacity 1
+      animation: fadeIn (opts.duration)s linear
+
+//ループアニメーションの生成
+// @example
+// ----------
+// create-keyframes(sampleAnime, 3, 10, {
+//     '0': { opacity: 1 },
+//    '50': { opacity: 0 },
+//   '100': { opacity: 1 }
+// })
+// ----------
+create-keyframes(name, duration, interval, animationHash)
+  @keyframes name
+    durationRatio = duration / (duration + interval)
+    for progress, cssHash in animationHash
+      {durationRatio * progress}{unquote('%')}
+        for key, val in cssHash
+          {key} val
+
+//cssアニメーション イージングのベースパターン
+// @example
+// ----------
+// transition opacity .5s easeOutQuint
+// ----------
+// Cubic
+easeInCubic    = cubic-bezier(0.550, 0.055, 0.675, 0.190);
+easeOutCubic   = cubic-bezier(0.215, 0.610, 0.355, 1.000);
+easeInOutCubic = cubic-bezier(0.645, 0.045, 0.355, 1.000);
+// Circ
+easeInCirc     = cubic-bezier(0.600, 0.040, 0.980, 0.335);
+easeOutCirc    = cubic-bezier(0.075, 0.820, 0.165, 1.000);
+easeInOutCirc  = cubic-bezier(0.785, 0.135, 0.150, 0.860);
+// Expo
+easeInExpo     = cubic-bezier(0.950, 0.050, 0.795, 0.035);
+easeOutExpo    = cubic-bezier(0.190, 1.000, 0.220, 1.000);
+easeInOutExpo  = cubic-bezier(1.000, 0.000, 0.000, 1.000);
+// Quad
+easeInQuad     = cubic-bezier(0.550, 0.085, 0.680, 0.530);
+easeOutQuad    = cubic-bezier(0.250, 0.460, 0.450, 0.940);
+easeInOutQuad  = cubic-bezier(0.455, 0.030, 0.515, 0.955);
+// Quart
+easeInQuart    = cubic-bezier(0.895, 0.030, 0.685, 0.220);
+easeOutQuart   = cubic-bezier(0.165, 0.840, 0.440, 1.000);
+easeInOutQuart = cubic-bezier(0.770, 0.000, 0.175, 1.000);
+// Quint
+easeInQuint    = cubic-bezier(0.755, 0.050, 0.855, 0.060);
+easeOutQuint   = cubic-bezier(0.230, 1.000, 0.320, 1.000);
+easeInOutQuint = cubic-bezier(0.860, 0.000, 0.070, 1.000);
+// Sine
+easeInSine     = cubic-bezier(0.470, 0.000, 0.745, 0.715);
+easeOutSine    = cubic-bezier(0.390, 0.575, 0.565, 1.000);
+easeInOutSine  = cubic-bezier(0.445, 0.050, 0.550, 0.950);
+// Back
+easeInBack     = cubic-bezier(0.600, -0.280, 0.735, 0.045);
+easeOutBack    = cubic-bezier(0.175,  0.885, 0.320, 1.275);
+easeInOutBack  = cubic-bezier(0.680, -0.550, 0.265, 1.550);
+
+
+//nib override
+
+opacity(val)
+  opacity val
+
+clearfix()
+  +cache('clearfix')
+    &::after
+      content ""
+      display block
+      clear both
+
+border-radius(vals...)
+  border-radius vals
+
+box-sizing(val)
+  box-sizing val
+
+box-shadow()
+  box-shadow arguments
+
+background-size(vals...)
+  background-size vals
+
+transform(vals...)
+  if support-android4
+    -webkit-transform vals
+  transform vals
+
+transform-origin(vals...)
+  if support-android4
+    -webkit-transform-origin vals
+  transform-origin vals
+
+transform-style(val)
+  if support-android4
+    -webkit-transform-style val
+  transform-style val
+
+backface-visibility(val)
+  if support-android4
+    -webkit-backface-visibility val
+  backface-visibility val
+
+perspective(val)
+  if support-android4
+    -webkit-perspective val
+  perspective val
+
+perspective-origin(vals...)
+  if support-android4
+    -webkit-perspective-origin vals
+  perspective-origin vals
+
+transition(vals...)
+  if support-android4
+    -webkit-transition vals
+  transition vals
+
+transition-property(vals...)
+  if support-android4
+    -webkit-transition-property vals
+  transition-property vals
+
+transition-duration(vals...)
+  if support-android4
+    -webkit-transition-duration vals
+  transition-duration vals
+
+transition-property(vals...)
+  if support-android4
+    -webkit-transition-property vals
+  transition-property vals
+
+transition-timing-function(vals...)
+  if support-android4
+    -webkit-transition-timing-function vals
+  transition-timing-function vals
+
+animation(vals...)
+  if support-android4
+    -webkit-animation vals
+  animation vals
+
+animation-name(vals...)
+  if support-android4
+    -webkit-animation-name vals
+  animation-name vals
+
+animation-duration(vals...)
+  if support-android4
+    -webkit-animation-duration vals
+  animation-duration vals
+
+animation-timing-function(vals...)
+  if support-android4
+    -webkit-animation-timing-function vals
+  animation-timing-function vals
+
+animation-delay(vals...)
+  if support-android4
+    -webkit-animation-delay vals
+  animation-delay vals
+
+animation-iteration-count(vals...)
+  if support-android4
+    -webkit-animation-iteration-count vals
+  animation-iteration-count vals
+
+animation-direction(vals...)
+  if support-android4
+    -webkit-animation-direction vals
+  animation-direction vals
+
+animation-fill-mode(vals...)
+  if support-android4
+    -webkit-animation-fill-mode vals
+  animation-fill-mode vals
+
+animation-play-state(vals...)
+  if support-android4
+    -webkit-animation-play-state vals
+  animation-play-state vals
